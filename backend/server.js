@@ -12,13 +12,14 @@ import { connect } from "http2";
 import { connectDB } from "./lib/db.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import path from "path";
 
 dotenv.config();
 
 const app = express();
 app.use(
   cors({
-    origin: "http://localhost:5173", // your frontend origin
+    origin: process.env.CLIENT_URL, // your frontend origin
     credentials: true, // allow cookies & auth headers
   })
 );
@@ -26,13 +27,25 @@ app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 const PORT = process.env.PORT || 3000;
 
+const __dirname = path.resolve();
+
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/coupons", couponRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/analytics", analyticsRoutes);
-
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "frontend/dist")));
+  app.get("*", (req, res) => {
+    res.sendFile(
+      path.join(__dirname, "frontend", "dist", "index.html"),
+      function (err) {
+        res.status(500).send(err);
+      }
+    );
+  });
+}
 app.listen(PORT, () => {
   console.log("App is running on http://localhost:" + PORT);
   connectDB();
