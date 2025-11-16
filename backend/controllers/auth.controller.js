@@ -64,6 +64,7 @@ export async function signup(req, res) {
 }
 
 export async function login(req, res) {
+  console.log(req.body);
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
@@ -78,9 +79,7 @@ export async function login(req, res) {
     await storeRefreshToken(user._id, refreshToken);
     setCookies(res, accessToken, refreshToken);
     res.status(200).json({
-      message: "Login successful",
-      accessToken,
-      refreshToken,
+      user: user,
     });
   } catch (error) {
     console.log("error in login controller", error.message);
@@ -140,4 +139,10 @@ export async function refreshToken(req, res) {
 
 // TODO IMPLEEMENT GET PROFILE
 
-export function getProfile() {}
+export const getProfile = async (req, res) => {
+  try {
+    res.json(req.user);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};

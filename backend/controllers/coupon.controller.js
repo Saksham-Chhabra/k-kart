@@ -6,6 +6,8 @@ export const getCoupon = async (req, res) => {
       userId: req.user._id,
       isActive: true,
     });
+    console.log("coupon", coupon);
+    console.log("userId", req.user._id);
     res.status(200).json(coupon || null);
   } catch (error) {
     console.error("Error fetching coupon:", error);

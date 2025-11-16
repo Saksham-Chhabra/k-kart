@@ -63,8 +63,9 @@ export const createProduct = async (req, res) => {
 
 export const deleteProduct = async (req, res) => {
   try {
-    const { productId } = req.params;
-    const deletedProduct = await Product.findByIdAndDelete(productId);
+    const { id } = req.params;
+    console.log("product to be deleted", await Product.findById(id));
+    const deletedProduct = await Product.findByIdAndDelete(id);
 
     if (!deletedProduct) {
       return res.status(404).json({ message: "Product not found" });
@@ -83,7 +84,7 @@ export const deleteProduct = async (req, res) => {
 export const getRecommendedProducts = async (req, res) => {
   try {
     const products = await Product.aggregate([
-      { $sample: { size: 3 } },
+      { $sample: { size: 4 } },
       {
         $project: {
           _id: 1,
@@ -117,29 +118,29 @@ export const getProductsByCategory = async (req, res) => {
 };
 
 export const toggleFeaturedProduct = async (req, res) => {
-  const { id } = req.params;
   try {
-    const product = await Product.findById(id);
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
+    const product = await Product.findById(req.params.id);
+    if (product) {
+      product.isFeatured = !product.isFeatured;
+      const updatedProduct = await product.save();
+      await updateFeaturedProductsCache();
+      res.json(updatedProduct);
+    } else {
+      res.status(404).json({ message: "Product not found" });
     }
-    product.isFeatured = !product.isFeatured;
-    await product.save();
-    res
-      .status(200)
-      .json({ message: "Product featured status toggled", product });
   } catch (error) {
-    console.error("Error toggling featured status:", error);
-    res.status(500).json({ message: "Error toggling featured status", error });
+    console.log("Error in toggleFeaturedProduct controller", error.message);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
 async function updateFeaturedProductsCache() {
   try {
+    // The lean() method  is used to return plain JavaScript objects instead of full Mongoose documents. This can significantly improve performance
+
     const featuredProducts = await Product.find({ isFeatured: true }).lean();
     await redis.set("featured_products", JSON.stringify(featuredProducts));
-    console.log("Featured products cache updated");
   } catch (error) {
-    console.error("Error updating featured products cache:", error);
+    console.log("error in update cache function");
   }
 }

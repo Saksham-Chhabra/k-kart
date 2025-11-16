@@ -11,21 +11,27 @@ import analyticsRoutes from "./routes/analytics.route.js";
 import { connect } from "http2";
 import { connectDB } from "./lib/db.js";
 import cookieParser from "cookie-parser";
+import cors from "cors";
 
 dotenv.config();
 
 const app = express();
-app.use(express.urlencoded({ extended: true }));
+app.use(
+  cors({
+    origin: "http://localhost:5173", // your frontend origin
+    credentials: true, // allow cookies & auth headers
+  })
+);
+app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 const PORT = process.env.PORT || 3000;
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
-app.use("/api/couponRoutes", couponRoutes);
-app.use("api/payments", paymentRoutes);
-app.use("api/analytics", analyticsRoutes);
-
+app.use("/api/coupons", couponRoutes);
+app.use("/api/payments", paymentRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
 app.listen(PORT, () => {
   console.log("App is running on http://localhost:" + PORT);
