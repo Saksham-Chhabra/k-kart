@@ -47,13 +47,17 @@ app.use("/api/analytics", analyticsRoutes);
 //   });
 // }
 if (process.env.NODE_ENV === "production") {
-  const frontendPath = path.join(__dirname, "../frontend/dist");
+  // Serve static files from frontend/dist
+  app.use(express.static(path.join(__dirname, "frontend/dist")));
 
-  app.use(express.static(frontendPath));
-
-  // ✅ Handle all routes by sending index.html
-  app.get("/*", (req, res) => {
-    res.sendFile(path.join(frontendPath, "index.html"));
+  // ✅ Handle client-side routing - serve index.html for all non-API routes
+  app.use((req, res, next) => {
+    // If it's an API route, pass to next handler (will 404 if not found)
+    if (req.path.startsWith("/api/")) {
+      return next();
+    }
+    // Otherwise, serve index.html for client-side routing
+    res.sendFile(path.join(__dirname, "frontend/dist/index.html"));
   });
 }
 app.listen(PORT, () => {
