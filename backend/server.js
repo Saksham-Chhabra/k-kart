@@ -35,15 +35,25 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/coupons", couponRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/analytics", analyticsRoutes);
+// if (process.env.NODE_ENV === "production") {
+//   app.use(express.static(path.join(__dirname, "frontend/dist")));
+//   app.get("*", (req, res) => {
+//     res.sendFile(
+//       path.join(__dirname, "frontend", "dist", "index.html"),
+//       function (err) {
+//         res.status(500).send(err);
+//       }
+//     );
+//   });
+// }
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "frontend/dist")));
-  app.get("*", (req, res) => {
-    res.sendFile(
-      path.join(__dirname, "frontend", "dist", "index.html"),
-      function (err) {
-        res.status(500).send(err);
-      }
-    );
+  const frontendPath = path.join(__dirname, "../frontend/dist");
+
+  app.use(express.static(frontendPath));
+
+  // ✅ Handle all routes by sending index.html
+  app.get("/*", (req, res) => {
+    res.sendFile(path.join(frontendPath, "index.html"));
   });
 }
 app.listen(PORT, () => {
